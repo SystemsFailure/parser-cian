@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+      "target": "ES6", // устанавливает версию ECMAScript, к которой будет компилироваться TypeScript
+      "module": "NodeNext", // указывает, какой модульный формат нужно использовать (commonjs, amd, es6, none)
+      "outDir": "./dist", // указывает путь для сохранения скомпилированных файлов
+      "strict": false, // включает строгую проверку типов
+      "esModuleInterop": true, // позволяет использовать модули CommonJS с синтаксисом ES6
+      "sourceMap": true, // создает файлы source map для отладки
+      "declaration": true, // создает файлы объявлений (declaration files .d.ts) для использования TypeScript в других проектах
+      "noImplicitAny": false, // запрещает неявный тип any
+      "strictNullChecks": true, // запрещает использование null и undefined без явного указания типа
+      "noUnusedLocals": true, // выдает ошибку, если есть неиспользуемые локальные переменные
+      "noUnusedParameters": true, // выдает ошибку, если есть неиспользуемые параметры функций
+      "noImplicitReturns": true, // выдает ошибку, если не все ветви функции имеют оператор return
+      "noFallthroughCasesInSwitch": true, // выдает ошибку, если в switch не указан оператор break
+      "moduleResolution": "NodeNext",
+      "strictPropertyInitialization": false // выдает ошибку, если не все свойства классов и объектов инициализированы
+    },
+    "exclude": [
+      "node_modules" // указывает путь к исключаемым из компиляции файлам или папкам
+    ]
+  }
