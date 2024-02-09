@@ -1,51 +1,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import axios  from 'axios-https-proxy-fix'
-import { getRandomProxy, proxyList } from './utils/proxy'
-import { ParserOptions } from './types/parserOptions.interface';
-import { ParserCianCity } from './types/cianCity.interface';
-import RentObject from './types/rentObject.interface';
+import { Cian } from './types/cian.namespace';
+import { proxyList } from './utils/proxy'
+import { Parser } from './abstract/parser.abstract';
 
 const types = [
     'suburbanrent', // Дом/дача
     'flatrent', // Квартира
 ]
 
-
-abstract class Parser {
-  protected baseUrl: string;
-  protected timeout: number;
-  protected cities: ParserCianCity[];
-  protected timeDelay: any;
-
-  constructor(options: ParserOptions) {
-    this.baseUrl = options.baseUrl;
-    this.timeout = options.timeout;
-    this.timeDelay = options.timeDelay;
-    this.cities = options.cities;
-  }
-
-  // Абстрактный метод, парсинга
-  abstract parse(): Promise<void>;
-
-  // метод для загрузки\обработки файлов
-  abstract downloadFile(url: string, array: any[], itemFullObject: any, outputObject: any): Promise<any>;
-
-  // метод для работы с базами данных
-  abstract databaseModeling(model: any, data: any): Promise<any>;
-
-  // Метод для проверки доступности источника
-  abstract getActiveProxies(url: string, config: {}): Promise<any>;
-
-  // Кастомный метод получения данных
-  abstract customFetchData(url: string, citys: ParserCianCity[]): Promise<any>;
-}
-
 class ParserCian extends Parser {
     /**
      * Основной метод parse(), отсюда все начинается
      */
     async parse() : Promise<void> {
+        console.log("[@] Parser started")
        await  this.customFetchData("https://api.cian.ru/search-offers/v2/search-offers-desktop", this.cities)
     }
     async downloadFile
@@ -120,10 +90,11 @@ class ParserCian extends Parser {
             }
     }
     databaseModeling(model: any, data: any): Promise<any> {
+        console.log(model, data)
         throw new Error('Method not implemented.');
     }
     
-    async customFetchData(url: string, citys: ParserCianCity[]): Promise<any> {
+    async customFetchData(url: string, citys: Cian.ParserCianCity[]): Promise<any> {
         try {
             // const parseSource = await ParseSource.findByOrFail('code', 'cian')
             // const country = await Country.findByOrFail('code', 'RU')
@@ -137,7 +108,7 @@ class ParserCian extends Parser {
                             const data = this.getJsonQuery(_type, page, city)
                             const config = this.getConfig(data, proxy, city)
 
-                            const isContinue = await new Promise((resolve, reject) => {
+                            const isContinue = await new Promise((resolve, _) => {
                                 axios({
                                     ...config
                                 })
@@ -166,7 +137,7 @@ class ParserCian extends Parser {
 
                                             // Здесь получаем гео данные из item
                                             const { houseObj, streetObj, districtObj } = this.getGeoOfItem(item)
-                                            // console.log(houseObj, streetObj, districtObj)
+                                            console.log(houseObj, streetObj, districtObj)
 
                                             // Здесь мы создаем адрес региона, адрес города в базе данных и устанавливаем его в rentObjectData
                                             // const { addressRegion, addressCity } = await this.setAllGeoInfo(rentObjectData, null, null, null, null, null, city, districtObj, streetObj)
@@ -258,7 +229,7 @@ class ParserCian extends Parser {
         return proxies[Math.floor(Math.random() * proxies.length)]
     }
 
-    private getJsonQuery(_type: any, page: any, city: ParserCianCity) {
+    private getJsonQuery(_type: any, page: any, city: Cian.ParserCianCity) {
         return {
             jsonQuery: {
                 _type: _type,
@@ -286,7 +257,7 @@ class ParserCian extends Parser {
         }
     }
 
-    private getConfig(data: any, proxy: any, city: ParserCianCity) {
+    private getConfig(data: any, proxy: any, city: Cian.ParserCianCity) {
         return {
             method: 'post',
             url: this.baseUrl,
@@ -315,7 +286,7 @@ class ParserCian extends Parser {
         }
     }
 
-    private generateRentObjectData(item: any, phone: string, parseSource: any = null) : RentObject {
+    private generateRentObjectData(item: any, phone: string, parseSource: any = null) : Cian.RentObject {
         return {
             title: null,
             parseSourceId: parseSource?.id || null,
@@ -342,7 +313,7 @@ class ParserCian extends Parser {
         }
     }
 
-    private async fillCategoryRentObject(item: any, rentObjectData: RentObject) : Promise<boolean> {
+    private async fillCategoryRentObject(item: any, rentObjectData: Cian.RentObject) : Promise<boolean> {
         if (item.category === 'flatRent') {
             switch (true) {
                 case item.roomsCount === 1:
@@ -409,7 +380,7 @@ class ParserCian extends Parser {
      * Здесь методы, которые скорее всего не войдут в итоговую версию парсера, но на всякий случай пусть здесь будут
      */
 
-    private async checkObjectExists(RentObject, item: any, parseSource: any) {
+    async checkObjectExists(RentObject, item: any, parseSource: any) {
         const isExist = !!(await RentObject.query()
         .where('parse_source_id', parseSource.id)
         .where('foreign_id', item.cianId)
@@ -417,7 +388,7 @@ class ParserCian extends Parser {
         return isExist
     }
 
-    private async setTitleObjectRent(rentObjectData: RentObject, ObjectType) {
+    async setTitleObjectRent(rentObjectData: Cian.RentObject, ObjectType) {
         if (!rentObjectData.title) {
             const type = await ObjectType.findOrFail(
                 rentObjectData.objectTypeId
@@ -431,9 +402,9 @@ class ParserCian extends Parser {
         }
     }
 
-    private async setAllGeoInfo
+    async setAllGeoInfo
         (
-            rentObjectData: RentObject,
+            rentObjectData: Cian.RentObject,
             Region,
             City,
             District,
@@ -520,7 +491,7 @@ class ParserCian extends Parser {
 }
 
 async function main() : Promise<void> {
-    const options: ParserOptions = {
+    const options: Cian.ParserOptions = {
         baseUrl: "https://api.cian.ru/search-offers/v2/search-offers-desktop/",
         timeDelay: 5_000,
         timeout: 30_000,
