@@ -65,19 +65,11 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var axios_https_proxy_fix_1 = require("axios-https-proxy-fix");
 var proxy_1 = require("./utils/proxy");
+var parser_abstract_1 = require("./abstract/parser.abstract");
 var types = [
     'suburbanrent', // Дом/дача
     'flatrent', // Квартира
 ];
-var Parser = /** @class */ (function () {
-    function Parser(options) {
-        this.baseUrl = options.baseUrl;
-        this.timeout = options.timeout;
-        this.timeDelay = options.timeDelay;
-        this.cities = options.cities;
-    }
-    return Parser;
-}());
 var ParserCian = /** @class */ (function (_super) {
     __extends(ParserCian, _super);
     function ParserCian() {
@@ -90,7 +82,9 @@ var ParserCian = /** @class */ (function (_super) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.customFetchData("https://api.cian.ru/search-offers/v2/search-offers-desktop", this.cities)];
+                    case 0:
+                        console.log("[@] Parser started");
+                        return [4 /*yield*/, this.customFetchData("https://api.cian.ru/search-offers/v2/search-offers-desktop", this.cities)];
                     case 1:
                         _a.sent();
                         return [2 /*return*/];
@@ -201,6 +195,7 @@ var ParserCian = /** @class */ (function (_super) {
         });
     };
     ParserCian.prototype.databaseModeling = function (model, data) {
+        console.log(model, data);
         throw new Error('Method not implemented.');
     };
     ParserCian.prototype.customFetchData = function (url, citys) {
@@ -221,7 +216,7 @@ var ParserCian = /** @class */ (function (_super) {
                         if (!(_i < citys_1.length)) return [3 /*break*/, 7];
                         city = citys_1[_i];
                         _loop_1 = function (_type) {
-                            var proxies, _loop_2, page;
+                            var proxies, _loop_2, page, state_1;
                             return __generator(this, function (_c) {
                                 switch (_c.label) {
                                     case 0: return [4 /*yield*/, this_1.getActiveProxies(url)];
@@ -235,7 +230,7 @@ var ParserCian = /** @class */ (function (_super) {
                                                         proxy = this_1.getRandomProxy_(proxies);
                                                         data = this_1.getJsonQuery(_type, page, city);
                                                         config = this_1.getConfig(data, proxy, city);
-                                                        return [4 /*yield*/, new Promise(function (resolve, reject) {
+                                                        return [4 /*yield*/, new Promise(function (resolve, _) {
                                                                 (0, axios_https_proxy_fix_1.default)(__assign({}, config))
                                                                     .then(function (response) { return __awaiter(_this, void 0, void 0, function () {
                                                                     var _i, _a, item, phone, rentObjectData, result, _b, houseObj, streetObj, districtObj, _c, arrayPhotosUrls, arrayBuffersImages, outRentObject;
@@ -264,7 +259,7 @@ var ParserCian = /** @class */ (function (_super) {
                                                                                 if (!result)
                                                                                     return [3 /*break*/, 4];
                                                                                 _b = this.getGeoOfItem(item), houseObj = _b.houseObj, streetObj = _b.streetObj, districtObj = _b.districtObj;
-                                                                                // console.log(houseObj, streetObj, districtObj)
+                                                                                console.log(houseObj, streetObj, districtObj);
                                                                                 // Здесь мы создаем адрес региона, адрес города в базе данных и устанавливаем его в rentObjectData
                                                                                 // const { addressRegion, addressCity } = await this.setAllGeoInfo(rentObjectData, null, null, null, null, null, city, districtObj, streetObj)
                                                                                 // console.log(addressRegion, addressCity)
@@ -290,6 +285,8 @@ var ParserCian = /** @class */ (function (_super) {
                                                             })];
                                                     case 1:
                                                         isContinue = _d.sent();
+                                                        if (!isContinue)
+                                                            return [2 /*return*/, "break"];
                                                         return [2 /*return*/];
                                                 }
                                             });
@@ -300,7 +297,9 @@ var ParserCian = /** @class */ (function (_super) {
                                         if (!(page < 100)) return [3 /*break*/, 5];
                                         return [5 /*yield**/, _loop_2(page)];
                                     case 3:
-                                        _c.sent();
+                                        state_1 = _c.sent();
+                                        if (state_1 === "break")
+                                            return [3 /*break*/, 5];
                                         _c.label = 4;
                                     case 4:
                                         page++;
@@ -644,7 +643,7 @@ var ParserCian = /** @class */ (function (_super) {
         });
     };
     return ParserCian;
-}(Parser));
+}(parser_abstract_1.Parser));
 function main() {
     return __awaiter(this, void 0, void 0, function () {
         var options, cian;

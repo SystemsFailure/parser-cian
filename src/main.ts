@@ -15,6 +15,7 @@ class ParserCian extends Parser {
      * Основной метод parse(), отсюда все начинается
      */
     async parse() : Promise<void> {
+        console.log("[@] Parser started")
        await  this.customFetchData("https://api.cian.ru/search-offers/v2/search-offers-desktop", this.cities)
     }
     async downloadFile
